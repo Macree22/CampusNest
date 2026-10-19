@@ -16,6 +16,9 @@ CampusNest is a multi-role PHP and PDO web application for managing student hous
 - [Security Notes](#security-notes)
 - [Troubleshooting](#troubleshooting)
 - [Pre-Seeded Test Accounts](#pre-seeded-test-accounts)
+- [Updates](#updates)
+- [Future Enhancements](#future-enhancements)
+- [API Reference](#api-reference)
 
 ## Features
 
@@ -279,3 +282,268 @@ Confirm the `view` query parameter and the logged-in role. All authenticated rou
 **Password for all student accounts:** `CampusNest2026!` with [setup_db.php](setup_db.php), or `password123` with [seeder.php](seeder.php).
 
 > Run only one seeding workflow at a time. The account names, email addresses, and passwords depend on which script was executed most recently.
+
+## Updates
+
+This section will include updates and changes made to the CampusNest project over time.
+
+- **October 2026**: Updated README to include a new section for updates and changes.
+
+## Future Enhancements
+
+- Implement a mobile-friendly interface.
+- Add more detailed user analytics.
+- Improve the payment processing system.
+
+## API Reference
+
+### Endpoints Summary
+
+| HTTP Method | Endpoint URL                | Description                                   | Auth Required |
+|-------------|-----------------------------|-----------------------------------------------|---------------|
+| POST        | /api/login.php              | Login and get token                          | No            |
+| POST        | /api/register.php           | Register a new student                        | No            |
+| GET         | /api/listings.php           | Fetch all verified vacant listings            | No            |
+| POST        | /api/apply.php              | Apply for a property                          | Yes           |
+| GET         | /api/my_applications.php     | Get the logged-in student's applications      | Yes           |
+| POST        | /api/pay.php                | Simulate a rental payment                     | Yes           |
+| POST        | /api/maintenance.php        | Submit a maintenance request                  | Yes           |
+| GET         | /api/admin_pending_listings.php | Get unverified listings                      | Admin Only    |
+| POST        | /api/admin_verify.php       | Approve a listing                            | Admin Only    |
+| GET         | /api/profile.php            | Get user profile details                      | Yes           |
+| POST        | /api/update_profile.php     | Update user details                           | Yes           |
+
+### POST /api/login.php
+
+Log in to the system and retrieve an authentication token.
+
+**Required Headers:**
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "email": "student@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Response:**
+```json
+{
+  "api_token": "your_api_token"
+}
+```
+
+### POST /api/register.php
+
+Register a new student in the system.
+
+**Required Headers:**
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "student@example.com",
+  "password": "yourpassword"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Registration successful"
+}
+```
+
+### GET /api/listings.php
+
+Fetch all verified vacant listings.
+
+**Required Headers:**
+- Authorization: Bearer <token> (if authenticated)
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "title": "Room in City Center",
+    "price": 500,
+    "description": "A cozy room in the heart of the city."
+  },
+  {
+    "id": 2,
+    "title": "Apartment near University",
+    "price": 800,
+    "description": "Spacious apartment close to campus."
+  }
+]
+```
+
+### POST /api/apply.php
+
+Apply for a property.
+
+**Required Headers:**
+- Authorization: Bearer <token>
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "listing_id": 1,
+  "message": "I am interested in this property."
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Application submitted successfully"
+}
+```
+
+### GET /api/my_applications.php
+
+Get the logged-in student's applications.
+
+**Required Headers:**
+- Authorization: Bearer <token>
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "listing_id": 1,
+    "status": "Pending"
+  }
+]
+```
+
+### POST /api/pay.php
+
+Simulate a rental payment.
+
+**Required Headers:**
+- Authorization: Bearer <token>
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "amount": 500,
+  "listing_id": 1
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Payment processed successfully"
+}
+```
+
+### POST /api/maintenance.php
+
+Submit a maintenance request.
+
+**Required Headers:**
+- Authorization: Bearer <token>
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "listing_id": 1,
+  "issue": "Leaky faucet"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Maintenance request submitted"
+}
+```
+
+### GET /api/admin_pending_listings.php
+
+Get unverified listings (Admin only).
+
+**Required Headers:**
+- Authorization: Bearer <admin_token>
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "title": "Room in City Center",
+    "status": "Pending"
+  }
+]
+```
+
+### POST /api/admin_verify.php
+
+Approve a listing (Admin only).
+
+**Required Headers:**
+- Authorization: Bearer <admin_token>
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "listing_id": 1
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Listing approved"
+}
+```
+
+### GET /api/profile.php
+
+Get user profile details.
+
+**Required Headers:**
+- Authorization: Bearer <token>
+
+**Response:**
+```json
+{
+  "name": "John Doe",
+  "email": "student@example.com"
+}
+```
+
+### POST /api/update_profile.php
+
+Update user details.
+
+**Required Headers:**
+- Authorization: Bearer <token>
+- Content-Type: application/json
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "newemail@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Profile updated successfully"
+}
+```
