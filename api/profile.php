@@ -1,14 +1,15 @@
 <?php
+header('Content-Type: application/json');
 require_once 'auth.php';
-$authData = authenticate($pdo); // Accepts any valid role
 
+// Authenticate the user (accepts Student, Landlord, or Admin)
+$authData = authenticate($pdo);
 $user = $authData['user'];
 $role = $authData['role'];
 
 $response = [
     'status' => 'success',
     'data' => [
-        'id' => $authData['id'],
         'firstName' => $user['firstName'],
         'lastName' => $user['lastName'],
         'email' => $user['email'],
@@ -16,11 +17,9 @@ $response = [
     ]
 ];
 
-// Add role-specific fields
-if ($role === 'student') {
+// Add student number if they are a student
+if ($role === 'student' && isset($user['studentNumber'])) {
     $response['data']['studentNumber'] = $user['studentNumber'];
-} elseif ($role === 'landlord') {
-    $response['data']['companyName'] = $user['companyName'];
 }
 
 echo json_encode($response);

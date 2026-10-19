@@ -4,26 +4,34 @@ $user = 'root';
 $pass = ''; 
 
 try {
+    // 1. Connect & Create Database
     $pdo = new PDO("mysql:host=$host;charset=utf8mb4", $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
-
     $pdo->exec("CREATE DATABASE IF NOT EXISTS campusnest CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
     $pdo->exec("USE campusnest;");
 
     $pdo->beginTransaction();
 
+    // 2. Drop existing tables to start fresh
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
     $pdo->exec("DROP TABLE IF EXISTS Notification, Booking, MaintenanceRequest, Payment, Application, ListingImage, Listing, Student, Landlord, Admin;");
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
-    // 1. Core Tables
+    // 3. Automatically create the local images directory if it doesn't exist
+    $imgDir = __DIR__ . '/images';
+    if (!is_dir($imgDir)) {
+        mkdir($imgDir, 0777, true);
+    }
+
+    // 4. Create Tables (API TOKENS INCLUDED)
     $pdo->exec("CREATE TABLE Admin (
         adminID INT AUTO_INCREMENT PRIMARY KEY,
         firstName VARCHAR(50) NOT NULL,
         lastName VARCHAR(50) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL
+        password VARCHAR(255) NOT NULL,
+        api_token VARCHAR(64) DEFAULT NULL
     )");
 
     $pdo->exec("CREATE TABLE Landlord (
@@ -34,7 +42,8 @@ try {
         password VARCHAR(255) NOT NULL,
         companyName VARCHAR(100) DEFAULT NULL,
         verificationStatus ENUM('Verified', 'Pending', 'Rejected') DEFAULT 'Verified',
-        dateJoined TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        dateJoined TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        api_token VARCHAR(64) DEFAULT NULL
     )");
 
     $pdo->exec("CREATE TABLE Student (
@@ -45,7 +54,8 @@ try {
         password VARCHAR(255) NOT NULL,
         studentNumber VARCHAR(50) UNIQUE DEFAULT NULL,
         accountStatus ENUM('Active', 'Suspended', 'Deleted') DEFAULT 'Active',
-        registrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        registrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        api_token VARCHAR(64) DEFAULT NULL
     )");
 
     $pdo->exec("CREATE TABLE Listing (
@@ -134,12 +144,12 @@ try {
         dateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // 5. Start Seeding Data
     $passHash = password_hash('CampusNest2026!', PASSWORD_DEFAULT);
 
-    // 2. Seed Admin
     $pdo->exec("INSERT INTO Admin (firstName, lastName, email, password) VALUES ('System', 'Admin', 'admin@campusnest.co.za', '$passHash')");
 
-    // 3. Seed Landlords (10 records)
+    // Seed Landlords
     $landlordData = [
         ['Thandi', 'Ngubane', 'thandi@mzanzi.co.za', 'Mzanzi Stays', 'Verified'],
         ['John', 'Smith', 'john@smithprop.com', 'Smith Properties', 'Verified'],
@@ -159,7 +169,7 @@ try {
         $landlordIDs[] = $pdo->lastInsertId();
     }
 
-    // 4. Seed Students (35 records - Brandon removed)
+    // Seed Students
     $firstNames = ['Siyabonga', 'Sibusiso', 'Jessica', 'Michael', 'Aisha', 'Kagiso', 'Nomhle', 'Liam', 'Chloe', 'Ethan', 'Zola', 'Dirk', 'Palesa', 'Ryan', 'Thabiso', 'Anika', 'Bongani', 'Simphiwe', 'Tshepo', 'Naledi', 'Caleb', 'Megan', 'Lucia', 'Francois', 'Kgomotso', 'Devin', 'Ayanda', 'Inathi', 'Lwazi', 'Mapula', 'Matthew', 'Samantha', 'Kian', 'Rorisang', 'Hannah'];
     $lastNames = ['Mkhize', 'Ndlovu', 'Jones', 'Scott', 'Khan', 'Molefe', 'Khumalo', 'Smith', 'Van Wyk', 'Naidoo', 'Zulu', 'Botha', 'Mokoena', 'Patel', 'Nkosi', 'Pretorius', 'Ndlovu', 'Sithole', 'Mabena', 'Kgame', 'Johnson', 'Adams', 'Pillay', 'Visser', 'Modise', 'Taylor', 'Buthelezi', 'Motaung', 'Radebe', 'Maluleka', 'Clark', 'Walker', 'Pillay', 'Motau', 'Davies'];
     
@@ -178,7 +188,7 @@ try {
         }
     }
 
-    // 5. Seed Listings (48 records) & Images
+    // Seed Listings with VARIETY OF IMAGES
     $citiesAndSuburbs = [
         ['Johannesburg', 'Braamfontein'],
         ['Johannesburg', 'Auckland Park'],
@@ -194,30 +204,38 @@ try {
     $stmtListing = $pdo->prepare("INSERT INTO Listing (landlordID, title, description, address, city, monthlyRent, roomType, amenities, availabilityStatus, isVerifiedByAdmin, imagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmtImg = $pdo->prepare("INSERT INTO ListingImage (listingID, imageURL) VALUES (?, ?)");
 
+    // Expanded Variety of Unsplash Images
     $roomImages = [
         'Single' => [
             'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&q=80',
-            'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?w=800&q=80'
+            'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?w=800&q=80',
+            'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80',
+            'https://images.unsplash.com/photo-1522771731478-44eb10e5c821?w=800&q=80'
         ],
         'Shared' => [
             'https://images.unsplash.com/photo-1502672260266-1c1e39b4968b?w=800&q=80',
-            'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80'
+            'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80',
+            'https://images.unsplash.com/photo-1517409595718-e8b6a153777b?w=800&q=80',
+            'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&q=80'
         ],
         'Studio' => [
             'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
-            'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80'
+            'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',
+            'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80',
+            'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80'
         ],
         'Bachelor' => [
             'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800&q=80',
-            'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80'
+            'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80',
+            'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80',
+            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80'
         ]
     ];
     
     $listingIDs = [];
     for ($i = 1; $i <= 48; $i++) {
         $loc = $citiesAndSuburbs[array_rand($citiesAndSuburbs)];
-        $city = $loc[0];
-        $suburb = $loc[1];
+        $city = $loc[0]; $suburb = $loc[1];
         $type = $roomTypes[array_rand($roomTypes)];
         $rent = rand(28, 115) * 100;
         $status = (rand(1, 100) > 40) ? 'Vacant' : ((rand(1, 100) > 20) ? 'Occupied' : 'Under Maintenance');
@@ -228,6 +246,8 @@ try {
         $title = "Modern " . $type . " in " . $suburb;
         $desc = "Fully furnished $type apartment located within walking distance to campus. Features secure access control, 24/7 security, and high-speed internet.";
         $address = rand(10, 180) . " Campus Avenue, " . $suburb;
+        
+        // Pick a random cover image from the category
         $pool = $roomImages[$type];
         $coverImg = $pool[array_rand($pool)];
 
@@ -235,41 +255,31 @@ try {
         $listingID = $pdo->lastInsertId();
         $listingIDs[] = ['id' => $listingID, 'landlordID' => $landlordID, 'rent' => $rent];
 
-        // Populate matching gallery images
+        // Populate ALL images from that category into the gallery
         foreach ($pool as $galleryUrl) {
             $stmtImg->execute([$listingID, $galleryUrl]);
         }
     }
 
-    // 6. Seed Applications (130 records)
+    // Seed Applications
     $stmtApp = $pdo->prepare("INSERT INTO Application (studentID, listingID, applicationDate, preferredMoveInDate, applicationStatus, landlordComment) VALUES (?, ?, ?, ?, ?, ?)");
-    $appStatuses = ['Pending', 'Approved', 'Rejected', 'Cancelled'];
-    $appWeights = [30, 40, 20, 10]; // 30% Pending, 40% Approved, etc.
-    
     $applicationRecords = [];
     for ($i = 0; $i < 130; $i++) {
         $studentID = $studentIDs[array_rand($studentIDs)];
         $listingObj = $listingIDs[array_rand($listingIDs)];
         $listingID = $listingObj['id'];
         
-        // Random date over past 4 months
         $daysAgo = rand(1, 120);
         $appDate = date('Y-m-d H:i:s', strtotime("-$daysAgo days"));
         $moveInDate = date('Y-m-d', strtotime("-$daysAgo days + " . rand(15, 45) . " days"));
         
-        // Weighted random status
         $randWeight = rand(1, 100);
         if ($randWeight <= 30) $status = 'Pending';
         elseif ($randWeight <= 70) $status = 'Approved';
         elseif ($randWeight <= 90) $status = 'Rejected';
         else $status = 'Cancelled';
 
-        $comment = null;
-        if ($status === 'Approved') {
-            $comment = "Application approved. Please proceed with deposit payment.";
-        } elseif ($status === 'Rejected') {
-            $comment = "Unfortunately, the unit was allocated to an earlier applicant.";
-        }
+        $comment = ($status === 'Approved') ? "Application approved. Please proceed with deposit payment." : (($status === 'Rejected') ? "Unfortunately, the unit was allocated to an earlier applicant." : null);
 
         $stmtApp->execute([$studentID, $listingID, $appDate, $moveInDate, $status, $comment]);
         $appID = $pdo->lastInsertId();
@@ -279,70 +289,45 @@ try {
         }
     }
 
-    // 7. Seed Bookings (90 records for approved applications)
+    // Seed Bookings
     $stmtBooking = $pdo->prepare("INSERT INTO Booking (studentID, listingID, applicationID, bookingDate, durationMonths, bookingStatus) VALUES (?, ?, ?, ?, ?, ?)");
-    $durations = [6, 12, 18, 24];
-    
     $bookingRecords = [];
     $bookingCount = min(90, count($applicationRecords));
     for ($i = 0; $i < $bookingCount; $i++) {
         $app = $applicationRecords[$i];
         $bookingDate = date('Y-m-d', strtotime($app['appDate'] . ' + 3 days'));
-        $duration = $durations[array_rand($durations)];
+        $duration = [6, 12, 18, 24][array_rand([6, 12, 18, 24])];
         $bookingStatus = (rand(1, 100) > 15) ? 'Active' : 'Completed';
 
         $stmtBooking->execute([$app['studentID'], $app['listingID'], $app['appID'], $bookingDate, $duration, $bookingStatus]);
-        $bookingID = $pdo->lastInsertId();
-        $bookingRecords[] = ['bookingID' => $bookingID, 'studentID' => $app['studentID'], 'listingID' => $app['listingID'], 'appID' => $app['appID'], 'rent' => $app['rent'], 'duration' => $duration, 'startDate' => $bookingDate];
+        $bookingRecords[] = ['bookingID' => $pdo->lastInsertId(), 'studentID' => $app['studentID'], 'listingID' => $app['listingID'], 'appID' => $app['appID'], 'rent' => $app['rent'], 'duration' => $duration, 'startDate' => $bookingDate];
     }
 
-    // 8. Seed Payments (180-200 records recurring for bookings)
+    // Seed Payments
     $stmtPayment = $pdo->prepare("INSERT INTO Payment (studentID, applicationID, listingID, amountPaid, paymentMethod, paymentStatus, transactionReference, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $methods = ['Credit Card', 'EFT', 'Debit Card'];
-    $payStatuses = ['Successful', 'Successful', 'Successful', 'Successful', 'Pending', 'Failed', 'Refunded']; // 80% success rate approx
-
     foreach ($bookingRecords as $bk) {
-        // Generate monthly payments for the duration or up to current month (past 3-6 months)
-        $installmentsToGenerate = min($bk['duration'], rand(3, 6));
-        for ($m = 0; $m < $installmentsToGenerate; $m++) {
+        $installments = min($bk['duration'], rand(3, 6));
+        for ($m = 0; $m < $installments; $m++) {
             $payDate = date('Y-m-d H:i:s', strtotime($bk['startDate'] . " + $m months"));
-            if (strtotime($payDate) > time()) continue; // don't bill future dates
-
-            $method = $methods[array_rand($methods)];
-            $pStatus = $payStatuses[array_rand($payStatuses)];
+            if (strtotime($payDate) > time()) continue;
             $txRef = 'TXN-' . strtoupper(bin2hex(random_bytes(5)));
-
-            $stmtPayment->execute([$bk['studentID'], $bk['appID'], $bk['listingID'], $bk['rent'], $method, $pStatus, $txRef, $payDate]);
+            $stmtPayment->execute([$bk['studentID'], $bk['appID'], $bk['listingID'], $bk['rent'], ['Credit Card', 'EFT', 'Debit Card'][array_rand(['Credit Card', 'EFT', 'Debit Card'])], ['Successful', 'Successful', 'Successful', 'Successful', 'Pending', 'Failed'][array_rand(['Successful', 'Successful', 'Successful', 'Successful', 'Pending', 'Failed'])], $txRef, $payDate]);
         }
     }
 
-    // 9. Seed Maintenance Requests (22 records)
+    // Seed Maintenance Requests
     $stmtMaint = $pdo->prepare("INSERT INTO MaintenanceRequest (studentID, listingID, requestDate, description, urgencyLevel, requestStatus, resolutionDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $urgencies = ['Low', 'Medium', 'High', 'Emergency'];
-    $maintStatuses = ['Submitted', 'In Progress', 'Resolved', 'Closed'];
-    $issues = [
-        'Leaking kitchen basin pipe.',
-        'Main bedroom light switch sparking.',
-        'Geyser not producing hot water.',
-        'Front door lock mechanism is stiff.',
-        'Wi-Fi router port connectivity failure.',
-        'Window latch broken in study room.'
-    ];
-
+    $issues = ['Leaking kitchen basin pipe.', 'Main bedroom light switch sparking.', 'Geyser not producing hot water.', 'Front door lock mechanism is stiff.', 'Wi-Fi router port connectivity failure.', 'Window latch broken in study room.'];
     for ($i = 0; $i < 22; $i++) {
-        $studentID = $studentIDs[array_rand($studentIDs)];
-        $listingObj = $listingIDs[array_rand($listingIDs)];
         $daysAgo = rand(1, 60);
         $reqDate = date('Y-m-d H:i:s', strtotime("-$daysAgo days"));
-        $urgency = $urgencies[array_rand($urgencies)];
-        $status = $maintStatuses[array_rand($maintStatuses)];
-        $desc = $issues[array_rand($issues)];
+        $urgency = ['Low', 'Medium', 'High', 'Emergency'][array_rand(['Low', 'Medium', 'High', 'Emergency'])];
+        $status = ['Submitted', 'In Progress', 'Resolved', 'Closed'][array_rand(['Submitted', 'In Progress', 'Resolved', 'Closed'])];
         $resDate = ($status === 'Resolved' || $status === 'Closed') ? date('Y-m-d', strtotime("-$daysAgo days + " . rand(1, 5) . " days")) : null;
-
-        $stmtMaint->execute([$studentID, $listingObj['id'], $reqDate, $desc, $urgency, $status, $resDate]);
+        $stmtMaint->execute([$studentIDs[array_rand($studentIDs)], $listingIDs[array_rand($listingIDs)]['id'], $reqDate, $issues[array_rand($issues)], $urgency, $status, $resDate]);
     }
 
-    // 10. Seed Notifications (250 records)
+    // Seed Notifications
     $stmtNotif = $pdo->prepare("INSERT INTO Notification (recipientID, recipientType, message, isRead) VALUES (?, ?, ?, ?)");
     $notifTemplates = [
         ['Student', 'Your accommodation application has been updated.'],
@@ -352,27 +337,26 @@ try {
         ['Landlord', 'Monthly rental payment received from tenant.'],
         ['Landlord', 'New maintenance request logged by tenant.']
     ];
-
     for ($i = 0; $i < 250; $i++) {
         $recType = (rand(1, 10) > 4) ? 'Student' : 'Landlord';
         $recID = ($recType === 'Student') ? $studentIDs[array_rand($studentIDs)] : $landlordIDs[array_rand($landlordIDs)];
         $template = $notifTemplates[array_rand($notifTemplates)];
-        $isRead = rand(0, 1);
-
-        $stmtNotif->execute([$recID, $recType, $template[1], $isRead]);
+        $stmtNotif->execute([$recID, $recType, $template[1], rand(0, 1)]);
     }
 
     $pdo->commit();
 
+    // Success UI
     echo "<div style='font-family:sans-serif; max-width:650px; margin:50px auto; padding:35px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; color:#166534; box-shadow:0 4px 6px rgba(0,0,0,0.05);'>";
     echo "<h2 style='margin-top:0; font-size:24px;'>CampusNest Master Seeder Completed Successfully!</h2>";
-    echo "<p>All database tables have been dropped, re-created with full relational schemas (including Bookings and Notifications), and populated with realistic dashboard data.</p>";
+    echo "<p>The database has been fully reset with all tables (including API tokens) and populated with a wide variety of images and realistic data.</p>";
+    echo "<p><em>Note: The /images/ folder has also been automatically created.</em></p>";
     echo "<hr style='border:0; border-top:1px solid #bbf7d0; margin:20px 0;'>";
     echo "<h3 style='font-size:16px; margin-bottom:10px;'>Generated Data Counts:</h3>";
     echo "<ul style='padding-left:20px; line-height:1.6;'>";
     echo "<li><b>Landlords:</b> 10 accounts</li>";
     echo "<li><b>Students:</b> 35 accounts</li>";
-    echo "<li><b>Listings:</b> 48 properties with gallery images</li>";
+    echo "<li><b>Listings:</b> 48 properties with variety of images</li>";
     echo "<li><b>Applications:</b> 130 records</li>";
     echo "<li><b>Bookings:</b> 90 active tenancies</li>";
     echo "<li><b>Payments:</b> ~180 recurring transaction records</li>";
@@ -380,7 +364,7 @@ try {
     echo "<li><b>Notifications:</b> 250 system alerts</li>";
     echo "</ul>";
     echo "<p style='margin-top:20px;'><strong>Default Test Password for all accounts:</strong> <code style='background:#dcfce7; padding:2px 6px; border-radius:4px;'>CampusNest2026!</code></p>";
-    echo "<p><a href='index.php' style='display:inline-block; margin-top:15px; padding:12px 24px; background:#2563eb; color:#fff; text-decoration:none; border-radius:12px; font-weight:600;'>Launch CampusNest Dashboards &rarr;</a></p>";
+    echo "<p><a href='index.php' style='display:inline-block; margin-top:15px; padding:12px 24px; background:#2563eb; color:#fff; text-decoration:none; border-radius:12px; font-weight:600;'>Launch CampusNest &rarr;</a></p>";
     echo "</div>";
 
 } catch (PDOException $e) {
