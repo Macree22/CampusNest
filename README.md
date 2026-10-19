@@ -16,6 +16,7 @@ CampusNest is a multi-role PHP and PDO web application for managing student hous
 - [Security Notes](#security-notes)
 - [Troubleshooting](#troubleshooting)
 - [Pre-Seeded Test Accounts](#pre-seeded-test-accounts)
+- [Screenshots](#screenshots)
 - [Updates](#updates)
 - [Future Enhancements](#future-enhancements)
 - [API Reference](#api-reference)
@@ -547,3 +548,101 @@ Update user details.
   "message": "Profile updated successfully"
 }
 ```
+
+## Screenshots
+
+### Authentication
+
+The authentication flow gives users a secure entry point to the platform. Students and landlords can sign in to their dashboards, while new users can register for account access.
+
+![Login](images/Login.png)
+
+The login screen allows registered users to access CampusNest with their email and password, directing them to the correct dashboard based on their role.
+
+![Sign Up](images/sign_up.png)
+
+The sign-up screen enables new students and landlords to create an account and begin using the accommodation management system.
+
+### Student Portal
+
+The student portal helps users browse verified housing options, track applications, and manage rent payments and maintenance requests from a single interface.
+
+![Student Navbar](images/student_navbar.png)
+
+The student navigation bar provides quick access to listing search, applications, payments, maintenance, leases, and profile tools.
+
+![Accommodations](images/accommodations.png)
+
+The accommodations screen lets students browse verified vacant properties with filter controls for location, type, and price to find suitable housing.
+
+![Applications](images/applications.png)
+
+Students can track the status of submitted applications, review approvals, and manage rent payments from the application dashboard.
+
+![Notifications](images/notifications.png)
+
+The notifications center keeps students informed about application updates, payment confirmations, maintenance progress, and platform alerts.
+
+### Landlord Portal
+
+The landlord portal streamlines listing management, tenant oversight, financial tracking, and approvals for incoming applications.
+
+![Landlord Navbar](images/landlord_navbar.png)
+
+The landlord navigation bar provides access to property management, tenant records, analytics, reports, and listing creation tools.
+
+![Landlord Portal](images/landlord_portal.png)
+
+Landlords can review pending applications, approve or reject student requests, and manage active property activity from the main dashboard.
+
+![Add New Listing](images/add_new_listing.png)
+
+The add listing form allows landlords to publish new property details, pricing, and availability for administrator review and public visibility.
+
+![Maintenance Requests](images/maintenance_requests.png)
+
+Landlords can view and respond to tenant maintenance tickets to coordinate repairs and keep properties in good condition.
+
+![Active Tenant Roster](images/active_tenant_roster.png)
+
+The active tenant roster displays current residents, lease details, and landlord contact information to help manage occupancy effectively.
+
+![Rental Income Logs](images/rental_income_logs.png)
+
+The rental income log gives landlords a clear record of payments received, payment dates, and tenant activity for financial tracking.
+
+![Earning Analytics](images/earning_analytics.png)
+
+The earning analytics screen provides detailed financial insights, including rental totals, payment trends, and profitability summaries.
+
+![Application Reports](images/application_reports.png)
+
+Landlords can generate printable application status reports for recordkeeping, review workflows, and formal reporting.
+
+### Admin Portal
+
+The admin portal gives platform administrators visibility over revenue, verification tasks, user accounts, and system activity across the entire CampusNest ecosystem.
+
+![Admin Navbar](images/admin_navbar.png)
+
+The admin navigation bar provides access to the platform dashboard, user management, financial reports, and system logs.
+
+![Admin Dashboard](images/admin_dashboard.png)
+
+Admins can verify pending listings, monitor total revenue, review recent payments, and oversee the overall health of the housing platform.
+
+![Admin Users](images/admin_users.png)
+
+The admin users screen provides a directory of registered students and landlords, allowing administrators to maintain and audit platform access.
+
+![Admin System Logs](images/admin_system_logs.png)
+
+The system logs view shows platform-wide activity, notifications, and operational events to help administrators monitor usage and manage issues.
+
+### Account Settings
+
+The account settings area helps users manage personal details, update credentials, and maintain a secure profile.
+
+![Account Settings](images/account_settings.png)
+
+The account settings screen allows users to update their profile information, manage contact details, and change their password securely.
