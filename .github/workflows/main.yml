@@ -1,0 +1,31 @@
+name: CampusNest PHP Website CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # 2. Set up PHP environment
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, pdo_mysql
+
+    # 3. Validate PHP Syntax (Linting)
+    - name: PHP Syntax Check
+      run: |
+        echo "Checking PHP syntax..."
+        # This command finds all .php files and checks them for syntax errors
+        find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 -P4 php -l
+        echo "All PHP files passed syntax checks!"
