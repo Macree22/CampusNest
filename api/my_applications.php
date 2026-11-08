@@ -4,9 +4,11 @@ $authData = authenticate($pdo, 'student');
 
 $stmt = $pdo->prepare("
     SELECT a.applicationID, a.applicationStatus, a.preferredMoveInDate, a.applicationDate, 
-           l.listingID, l.title, l.monthlyRent, l.address, l.imagePath
+           l.listingID, l.title, l.monthlyRent, l.address, l.imagePath,
+           b.bookingID, b.studentAccepted, b.durationMonths, b.totalContractValue
     FROM Application a 
     JOIN Listing l ON a.listingID = l.listingID 
+    LEFT JOIN Booking b ON a.applicationID = b.applicationID
     WHERE a.studentID = ?
     ORDER BY a.applicationDate DESC
 ");
