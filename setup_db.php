@@ -362,11 +362,8 @@ try {
     echo "</div>";
 
 } catch (PDOException $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
     echo "<div style='font-family:sans-serif; max-width:650px; margin:50px auto; padding:35px; background:#fef2f2; border:1px solid #fecaca; border-radius:20px; color:#991b1b;'>";
-    echo "<h2 style='margin-top:0;'>Seeding Transaction Failed</h2>";
+    echo "<h2 style='margin-top:0;'>Seeding Failed</h2>";
     echo "<p>" . htmlspecialchars($e->getMessage()) . "</p>";
     echo "</div>";
 }
