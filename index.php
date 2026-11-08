@@ -33,6 +33,8 @@ if (!isset($_SESSION['user_id'])) {
             require_once 'student_payments.php';
         } elseif ($view === 'maintenance') {
             require_once 'student_maintenance.php';
+        } elseif ($view === 'lease_receipt') {
+            require_once 'lease_receipt.php';
         } elseif ($view === 'receipt') {
             require_once 'receipt.php';
         } elseif ($view === 'detail') {

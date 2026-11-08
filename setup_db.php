@@ -101,7 +101,9 @@ try {
         applicationID INT NOT NULL,
         bookingDate DATE NOT NULL,
         durationMonths INT NOT NULL,
-        bookingStatus ENUM('Active', 'Completed', 'Terminated') DEFAULT 'Active',
+        bookingStatus ENUM('Pending', 'Active', 'Completed', 'Terminated') DEFAULT 'Pending',
+        studentAccepted TINYINT(1) DEFAULT 0,
+        totalContractValue DECIMAL(10,2) DEFAULT 0,
         FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE,
         FOREIGN KEY (listingID) REFERENCES Listing(listingID) ON DELETE CASCADE,
         FOREIGN KEY (applicationID) REFERENCES Application(applicationID) ON DELETE CASCADE
@@ -130,6 +132,7 @@ try {
         description TEXT NOT NULL,
         urgencyLevel ENUM('Low', 'Medium', 'High', 'Emergency') DEFAULT 'Medium',
         requestStatus ENUM('Submitted', 'In Progress', 'Resolved', 'Closed') DEFAULT 'Submitted',
+        landlordComment TEXT DEFAULT NULL,
         resolutionDate DATE DEFAULT NULL,
         FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE,
         FOREIGN KEY (listingID) REFERENCES Listing(listingID) ON DELETE CASCADE

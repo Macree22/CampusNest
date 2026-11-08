@@ -176,15 +176,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Landlord Approve/Reject
         if (in_array($action, ['approve', 'reject']) && $_SESSION['role'] === 'landlord' && !empty($_POST['applicationID'])) {         
             $newStatus = $action === 'approve' ? 'Approved' : 'Rejected';
-            $verify = $pdo->prepare("SELECT a.applicationID FROM Application a JOIN Listing l ON a.listingID = l.listingID WHERE a.applicationID = ? AND l.landlordID = ?");
+            $verify = $pdo->prepare("SELECT a.applicationID, a.studentID, a.listingID, l.monthlyRent, s.email, s.firstName, s.lastName, l.title FROM Application a JOIN Listing l ON a.listingID = l.listingID JOIN Student s ON a.studentID = s.studentID WHERE a.applicationID = ? AND l.landlordID = ?");
             $verify->execute([$_POST['applicationID'], $_SESSION['user_id']]);
             
-            if ($verify->fetch()) {
+            if ($application = $verify->fetch()) {
                 $pdo->prepare("UPDATE Application SET applicationStatus = ? WHERE applicationID = ?")->execute([$newStatus, $_POST['applicationID']]);
-                $flash = "Application {$newStatus}.";     
+
+                if ($action === 'approve') {
+                    $bookingDate = date('Y-m-d');
+                    $durationMonths = 10;
+                    $monthlyRent = (float)$application['monthlyRent'];
+                    $totalContractValue = $monthlyRent * $durationMonths;
+
+                    $existingBooking = $pdo->prepare("SELECT bookingID FROM Booking WHERE applicationID = ?");
+                    $existingBooking->execute([$_POST['applicationID']]);
+
+                    if (!$existingBooking->fetch()) {
+                        $stmt = $pdo->prepare("INSERT INTO Booking (studentID, listingID, applicationID, bookingDate, durationMonths, bookingStatus, studentAccepted, totalContractValue) VALUES (?, ?, ?, ?, ?, 'Pending', 0, ?)");
+                        $stmt->execute([
+                            $application['studentID'],
+                            $application['listingID'],
+                            $_POST['applicationID'],
+                            $bookingDate,
+                            $durationMonths,
+                            $totalContractValue
+                        ]);
+                    }
+
+                    $notificationMessage = 'Your application was approved! Please sign your lease agreement.';
+                    $stmtNotif = $pdo->prepare("INSERT INTO Notification (recipientID, recipientType, message, isRead) VALUES (?, ?, ?, 0)");
+                    $stmtNotif->execute([$application['studentID'], 'Student', $notificationMessage]);
+                    $flash = "Application Approved. Lease generated and notification sent.";
+                } else {
+                    $flash = "Application {$newStatus}.";
+                }
             }
         }
 
+        // Student Accept Lease
+        if ($action === 'accept_lease' && $_SESSION['role'] === 'student') {
+            $bookingID = $_POST['bookingID'] ?? null;
+            if ($bookingID) {
+                $check = $pdo->prepare("SELECT b.bookingID, b.listingID, b.studentID, l.landlordID, l.title FROM Booking b JOIN Listing l ON b.listingID = l.listingID WHERE b.bookingID = ? AND b.studentID = ?");
+                $check->execute([$bookingID, $_SESSION['user_id']]);
+
+                if ($lease = $check->fetch()) {
+                    $pdo->prepare("UPDATE Booking SET studentAccepted = 1, bookingStatus = 'Active' WHERE bookingID = ? AND studentID = ?")
+                        ->execute([$bookingID, $_SESSION['user_id']]);
+
+                    $studentNotif = $pdo->prepare("INSERT INTO Notification (recipientID, recipientType, message, isRead) VALUES (?, ?, ?, 0)");
+                    $studentNotif->execute([
+                        $_SESSION['user_id'],
+                        'Student',
+                        'Your lease agreement has been signed successfully.'
+                    ]);
+
+                    $landlordNotif = $pdo->prepare("INSERT INTO Notification (recipientID, recipientType, message, isRead) VALUES (?, ?, ?, 0)");
+                    $landlordNotif->execute([
+                        $lease['landlordID'],
+                        'Landlord',
+                        'A student has signed the lease agreement for ' . $lease['title'] . '.'
+                    ]);
+
+                    $flash = "Lease accepted successfully.";
+                } else {
+                    $flash = "Unauthorized lease acceptance.";
+                }
+            }
+        }
+        
         // Student Payment
         if ($action === 'pay' && $_SESSION['role'] === 'student') {
             $txRef = 'TXN-' . strtoupper(uniqid());
@@ -203,11 +263,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Landlord Maintenance Status Update
         if ($action === 'update_maintenance' && $_SESSION['role'] === 'landlord') {
-            $verify = $pdo->prepare("SELECT m.requestID FROM MaintenanceRequest m JOIN Listing l ON m.listingID = l.listingID WHERE m.requestID = ? AND l.landlordID = ?");
-            $verify->execute([$_POST['requestID'], $_SESSION['user_id']]);
-            if ($verify->fetch()) {
-                $pdo->prepare("UPDATE MaintenanceRequest SET requestStatus = ? WHERE requestID = ?")->execute([$_POST['requestStatus'], $_POST['requestID']]);
-                $flash = "Maintenance status updated.";
+            $requestID = $_POST['requestID'] ?? null;
+            $requestStatus = $_POST['requestStatus'] ?? 'Submitted';
+            $landlordComment = trim($_POST['landlordComment'] ?? '');
+
+            $verify = $pdo->prepare("SELECT m.requestID, m.studentID, m.listingID, l.title, s.firstName, s.lastName FROM MaintenanceRequest m JOIN Listing l ON m.listingID = l.listingID JOIN Student s ON m.studentID = s.studentID WHERE m.requestID = ? AND l.landlordID = ?");
+            $verify->execute([$requestID, $_SESSION['user_id']]);
+
+            if ($maintenance = $verify->fetch()) {
+                $stmt = $pdo->prepare("UPDATE MaintenanceRequest SET requestStatus = ?, landlordComment = ? WHERE requestID = ?");
+                $stmt->execute([$requestStatus, $landlordComment, $requestID]);
+
+                $message = 'Your maintenance request was updated to ' . $requestStatus . '.';
+                if (!empty($landlordComment)) {
+                    $message .= ' Note from landlord: ' . $landlordComment;
+                }
+
+                $notif = $pdo->prepare("INSERT INTO Notification (recipientID, recipientType, message, isRead) VALUES (?, ?, ?, 0)");
+                $notif->execute([$maintenance['studentID'], 'Student', $message]);
+
+                $flash = "Maintenance request updated.";
             }
         }
 
