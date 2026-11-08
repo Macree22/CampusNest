@@ -1,7 +1,5 @@
 <?php
-
-ini_set('default_socket_timeout', 10);
-
+// Hardcoded to ensure no environment variable conflicts
 $host = 'campusnest-db.mysql.database.azure.com';
 $db   = 'campusnest';
 $user = 'campusnest_user';
@@ -14,6 +12,7 @@ $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
+    // Force PHP to not verify the server cert since SSL is turned off
     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
 ];
 
