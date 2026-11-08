@@ -1,6 +1,11 @@
 <?php
+// Enable error reporting to see exactly what's wrong
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $host = 'localhost';
-$user = 'campusnest_user'; // Using the specific user we created
+$user = 'campusnest_user'; 
 $pass = 'CampusNest123!';  
 $db   = 'campusnest';
 
@@ -8,8 +13,6 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
-
-    $pdo->beginTransaction();
 
     // Drop existing tables to start fresh
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
@@ -206,26 +209,10 @@ try {
     $stmtImg = $pdo->prepare("INSERT INTO ListingImage (listingID, imageURL) VALUES (?, ?)");
 
     $roomImages = [
-        'Single' => [
-            'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&q=80',
-            'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?w=800&q=80',
-            'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80'
-        ],
-        'Shared' => [
-            'https://images.unsplash.com/photo-1502672260266-1c1e39b4968b?w=800&q=80',
-            'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80',
-            'https://images.unsplash.com/photo-1517409595718-e8b6a153777b?w=800&q=80'
-        ],
-        'Studio' => [
-            'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
-            'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',
-            'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80'
-        ],
-        'Bachelor' => [
-            'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800&q=80',
-            'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80',
-            'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80'
-        ]
+        'Single' => ['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&q=80', 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?w=800&q=80', 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80'],
+        'Shared' => ['https://images.unsplash.com/photo-1502672260266-1c1e39b4968b?w=800&q=80', 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80', 'https://images.unsplash.com/photo-1517409595718-e8b6a153777b?w=800&q=80'],
+        'Studio' => ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80', 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80', 'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80'],
+        'Bachelor' => ['https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800&q=80', 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80', 'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80']
     ];
     
     $listingIDs = [];
@@ -338,22 +325,19 @@ try {
         $stmtNotif->execute([$recID, $recType, $template[1], rand(0, 1)]);
     }
 
-    $pdo->commit();
-
     // Success UI
     echo "<div style='font-family:sans-serif; max-width:650px; margin:50px auto; padding:35px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; color:#166534; box-shadow:0 4px 6px rgba(0,0,0,0.05);'>";
     echo "<h2 style='margin-top:0; font-size:24px;'>CampusNest Master Seeder Completed Successfully!</h2>";
-    echo "<p>The database has been fully reset with all tables (including API tokens) and populated with a wide variety of images and realistic data.</p>";
-    echo "<p><em>Note: The /images/ folder has also been automatically created.</em></p>";
+    echo "<p>The database has been fully reset with all tables and populated with realistic data.</p>";
     echo "<hr style='border:0; border-top:1px solid #bbf7d0; margin:20px 0;'>";
     echo "<h3 style='font-size:16px; margin-bottom:10px;'>Generated Data Counts:</h3>";
     echo "<ul style='padding-left:20px; line-height:1.6;'>";
     echo "<li><b>Landlords:</b> 10 accounts</li>";
     echo "<li><b>Students:</b> 35 accounts</li>";
-    echo "<li><b>Listings:</b> 48 properties with variety of images</li>";
+    echo "<li><b>Listings:</b> 48 properties</li>";
     echo "<li><b>Applications:</b> 130 records</li>";
     echo "<li><b>Bookings:</b> 90 active tenancies</li>";
-    echo "<li><b>Payments:</b> ~180 recurring transaction records</li>";
+    echo "<li><b>Payments:</b> ~180 recurring transactions</li>";
     echo "<li><b>Maintenance Requests:</b> 22 tickets</li>";
     echo "<li><b>Notifications:</b> 250 system alerts</li>";
     echo "</ul>";
