@@ -1,24 +1,22 @@
 <?php
-$host = '127.0.0.1';
-$user = 'root';
-$pass = ''; 
+$host = 'localhost';
+$user = 'campusnest_user'; // Using the specific user we created
+$pass = 'CampusNest123!';  
+$db   = 'campusnest';
 
 try {
-    // 1. Connect & Create Database
-    $pdo = new PDO("mysql:host=$host;charset=utf8mb4", $user, $pass, [
+    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS campusnest CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-    $pdo->exec("USE campusnest;");
 
     $pdo->beginTransaction();
 
-    // 2. Drop existing tables to start fresh
+    // Drop existing tables to start fresh
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
     $pdo->exec("DROP TABLE IF EXISTS Notification, Booking, MaintenanceRequest, Payment, Application, ListingImage, Listing, Student, Landlord, Admin;");
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
-    // 3. Automatically create the local images directory if it doesn't exist
+    // Automatically create the local images directory if it doesn't exist
     $imgDir = __DIR__ . '/images';
     if (!is_dir($imgDir)) {
         mkdir($imgDir, 0777, true);
@@ -207,31 +205,26 @@ try {
     $stmtListing = $pdo->prepare("INSERT INTO Listing (landlordID, title, description, address, city, monthlyRent, roomType, amenities, availabilityStatus, isVerifiedByAdmin, imagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmtImg = $pdo->prepare("INSERT INTO ListingImage (listingID, imageURL) VALUES (?, ?)");
 
-    // Expanded Variety of Unsplash Images
     $roomImages = [
         'Single' => [
             'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&q=80',
             'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?w=800&q=80',
-            'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80',
-            'https://images.unsplash.com/photo-1522771731478-44eb10e5c821?w=800&q=80'
+            'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80'
         ],
         'Shared' => [
             'https://images.unsplash.com/photo-1502672260266-1c1e39b4968b?w=800&q=80',
             'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80',
-            'https://images.unsplash.com/photo-1517409595718-e8b6a153777b?w=800&q=80',
-            'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&q=80'
+            'https://images.unsplash.com/photo-1517409595718-e8b6a153777b?w=800&q=80'
         ],
         'Studio' => [
             'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
             'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',
-            'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80',
-            'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80'
+            'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80'
         ],
         'Bachelor' => [
             'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800&q=80',
             'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80',
-            'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80',
-            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80'
+            'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80'
         ]
     ];
     
@@ -250,7 +243,6 @@ try {
         $desc = "Fully furnished $type apartment located within walking distance to campus. Features secure access control, 24/7 security, and high-speed internet.";
         $address = rand(10, 180) . " Campus Avenue, " . $suburb;
         
-        // Pick a random cover image from the category
         $pool = $roomImages[$type];
         $coverImg = $pool[array_rand($pool)];
 
@@ -258,7 +250,6 @@ try {
         $listingID = $pdo->lastInsertId();
         $listingIDs[] = ['id' => $listingID, 'landlordID' => $landlordID, 'rent' => $rent];
 
-        // Populate ALL images from that category into the gallery
         foreach ($pool as $galleryUrl) {
             $stmtImg->execute([$listingID, $galleryUrl]);
         }
