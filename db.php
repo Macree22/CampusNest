@@ -1,20 +1,17 @@
 <?php
-$host = 'campusnest-db.mysql.database.azure.com';
-$db   = 'campusnest';
-$user = 'campusnest_user';
-$pass = 'Rend*ujS5'; // The password you used in Workbench
+// Use getenv() to read from Azure App Settings, fallback to hardcoded if not found
+$host = getenv('DB_HOST') ?: 'campusnest-db.mysql.database.azure.com';
+$db   = getenv('DB_DATABASE') ?: 'campusnest';
+$user = getenv('DB_USERNAME') ?: 'campusnest_user';
+$pass = getenv('DB_PASSWORD') ?: 'Rend*ujS5';
 $charset = 'utf8mb4';
-
 
 $dsn = "mysql:host=$host;port=3306;dbname=$db;charset=$charset";
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
-
-
-    // Point to the certificate file in the same folder
-    PDO::MYSQL_ATTR_SSL_CA => getenv('MYSQL_ATTR_SSL_CA') ?: __DIR__ . '/ssl/DigiCertGlobalRootCA2.crt.pem',
+    PDO::MYSQL_ATTR_SSL_CA       => getenv('MYSQL_ATTR_SSL_CA') ?: __DIR__ . '/ssl/DigiCertGlobalRootCA2.crt.pem',
     PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
 ];
 
