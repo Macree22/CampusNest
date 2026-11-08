@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
+$user = 'campusnest_user';     // Changed from 'root'
+$pass = 'CampusNest123!';      // The password we set in the terminal
 $db   = 'campusnest';
-$user = 'campusnest_user';
-$pass = 'CampusNest123!'; 
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=3306;dbname=$db;charset=$charset";
