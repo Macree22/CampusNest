@@ -29,6 +29,8 @@ CampusNest is a multi-role PHP and PDO web application for managing student hous
 - Filter properties by location, room type, and price range.
 - View detailed property information and image galleries.
 - Submit and track accommodation applications.
+- Review landlord approvals and sign lease agreements.
+- Access digital lease receipts and payment records.
 - Pay rent for approved applications and view digital receipts.
 - View active leases and submit maintenance requests.
 - Read account notifications and update profile details.
@@ -38,6 +40,7 @@ CampusNest is a multi-role PHP and PDO web application for managing student hous
 - Publish and manage property listings.
 - Update rent and property availability.
 - Review, approve, or reject student applications.
+- Generate lease agreements and notify students when contracts are signed.
 - View tenants, maintenance requests, payment records, and financial analytics.
 - Generate application status reports.
 
@@ -67,6 +70,7 @@ campusnest/
 |- init.php                  # Session bootstrap, core functions, and action handler
 |- db.php                    # PDO database connection
 |- setup_db.php              # Automated database schema installer and seeder
+|- migrate.php               # Schema upgrade script for existing installations
 |- health_check.php          # Environment and table diagnostics utility
 |
 |- header.php                # Global navigation header component
@@ -77,10 +81,11 @@ campusnest/
 |- profile.php               # User account settings and profile manager
 |- help.php                  # Support center and FAQ guide
 |- notifications.php         # User alert notification center
+|- lease_receipt.php         # Lease agreement and receipt printable page
 |- 404.php                   # Error handler for invalid routes
 |
 |- student.php               # Student search and property filter portal
-|- student_applications.php  # Student application tracker
+|- student_applications.php  # Student application tracker and lease acceptance flow
 |- student_leases.php        # Active student lease contracts viewer
 |- student_payments.php      # Payment history and receipt log
 |- student_maintenance.php   # Student maintenance ticket portal
@@ -109,6 +114,7 @@ campusnest/
 - **`init.php`**: Starts sessions, includes the database connection, defines `randFormat`, and processes global POST actions including authentication, profiles, applications, payments, maintenance requests, listing updates, and verification.
 - **`db.php`**: Configures the PDO connection to the MySQL `campusnest` database.
 - **`setup_db.php`**: Creates the database schema, recreates the required tables, and seeds test data.
+- **`migrate.php`**: Updates existing installations with newer schema fields such as lease acceptance and contract metadata.
 - **`health_check.php`**: Provides diagnostics for database tables and required files.
 - **`header.php`**: Renders the global navigation header for guests, students, landlords, and administrators.
 - **`footer.php`**: Renders the shared footer and branding markup.
@@ -118,9 +124,10 @@ campusnest/
 - **`profile.php`**: Authenticated profile and password management.
 - **`help.php`**: Frequently asked questions and support guidance.
 - **`notifications.php`**: Displays notifications for the active user.
+- **`lease_receipt.php`**: Printable lease agreement and receipt page for approved bookings.
 - **`404.php`**: Handles broken or unauthorized routes.
 - **`student.php`**: Student accommodation search with location, room type, and price filters.
-- **`student_applications.php`**: Student application tracker with approved-unit payment access.
+- **`student_applications.php`**: Student application tracker with approved-unit payment access and lease acceptance flow.
 - **`student_leases.php`**: Active lease terms and landlord contact information.
 - **`student_payments.php`**: Payment history and digital receipt links.
 - **`student_maintenance.php`**: Maintenance ticket submission and progress tracking.
@@ -154,6 +161,8 @@ campusnest/
 4. Run the installer at [http://localhost/campusnest/setup_db.php](http://localhost/campusnest/setup_db.php).
 5. Launch the application at [http://localhost/campusnest/index.php](http://localhost/campusnest/index.php).
 
+> **Important:** For a fresh install, use `setup_db.php` as the single setup entry point. It recreates the schema and seeds the default accounts and sample data. Existing systems can use `migrate.php` to apply updates without resetting data.
+
 > **Warning:** `setup_db.php` drops and recreates the application tables before seeding test data. Do not run it against a database containing data you need to keep.
 
 ## Application Routes
@@ -181,17 +190,18 @@ The application uses `index.php` as its front controller. Views are selected wit
 | `?view=reports` | Administrator | `admin_reports.php` |
 | `?view=logs` | Administrator | `admin_logs.php` |
 | `?view=profile` | Authenticated users | `profile.php` |
-| `?view=notifications` | Authenticated users | `notifications.php` |
+| `?view=notifications` | Authenticated users | `notifications.php` |}
 
 ## User Workflows
 
-### Student application and payment
+### Student application and lease workflow
 
 1. Log in as a student and open the accommodation search.
 2. Select a verified vacant listing and submit an application.
 3. Wait for the landlord to approve the application.
-4. Open the approved application and submit a payment.
-5. View the receipt from the payment history page.
+4. Review the generated lease agreement and sign the contract.
+5. Receive a lease-signed notification and access the downloadable receipt.
+6. View the active lease, payment history, and maintenance tickets.
 
 ### Landlord property management
 
@@ -288,6 +298,7 @@ Confirm the `view` query parameter and the logged-in role. All authenticated rou
 
 This section will include updates and changes made to the CampusNest project over time.
 
+- **November 2026**: Added full lease agreement generation, signed-lease notifications, maintenance comment tracking, and a modern Tailwind UI refresh.
 - **October 2026**: Updated README to include a new section for updates and changes.
 
 ## Future Enhancements
